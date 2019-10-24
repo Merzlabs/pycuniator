@@ -23,5 +23,7 @@ class AccountInformationService:
         url = self._config.full_url + 'accounts'
 
         r = self._requests.get(url,headers,parameters)
+        print(r.url)
+        print(r.json())
         accountInfo = Accounts(r.json())
         return accountInfo

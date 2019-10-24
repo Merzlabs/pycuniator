@@ -4,14 +4,13 @@ from re import sub as re_sub
 from hashlib import sha256 as hash_sha256
 import urllib.parse
 
-from flask import Flask
-app = Flask(__name__)
-
 from pecuniwrap.Configuration import CuniatorConfiguration
 from pecuniwrap.AccessCredentials import AccessCredentials
+from pecuniwrap.exceptions.OAuthFlowError import OAuthFlowError
 
 from pecuniwrap.request.Requests import Requests
 from pecuniwrap.oauth.PKCE import PKCE
+from pecuniwrap.oauth.StateMapValues import StateMapValues
 
 from pecuniwrap.oauth.ResponseModels.WellKnownEndpoint import WellKnownEndpointResponse
 from pecuniwrap.oauth.ResponseModels.AccountInfoConsent import AccountInfoConsent
@@ -22,6 +21,9 @@ class OAuth:
     def __init__(self, config: CuniatorConfiguration, requests: Requests):
         self._config = config
         self._requests = requests
+
+        #TODO implement this with database to be stateless function
+        self.stateMap = {}
 
     # 1 use well known endpoint to get specific oauth endpoints for banks
     def _well_known_endpoint_info(self) -> WellKnownEndpointResponse:
@@ -62,11 +64,11 @@ class OAuth:
         return consent
 
     # 3. Construct authorize url which user should open to enter credentials
-    def _authorize_url(self, authorization_endpoint: str, consentId: str, code_challenge:str):
+    def _authorize_url(self, authorization_endpoint: str, consentId: str, code_challenge:str, state:str):
         authorize_url = 'responseType=code'
         authorize_url += '&client_id='+ self._config.tpp_client_id
         authorize_url += '&scope=AIS:' + urllib.parse.quote(' ' + consentId)
-        authorize_url += '&state=whatever' #TODO states not empty placeholder
+        authorize_url += '&state=' + urllib.parse.quote(state)
         authorize_url += '&code_challenge_method=S256'
         authorize_url += '&code_challenge=' + code_challenge
         authorize_url += '&redirect_uri=' + urllib.parse.quote(self._config.tppredirecturi)
@@ -93,37 +95,44 @@ class OAuth:
 
     #TODO method with SOCKET waiting for reponse redirect rule call
 
-    # whole login flow to get valid token
-    def login(self) -> AccessCredentials:
+    #TODO return types
+    def get_login_url(self, state:str="cliEmpty"):
         well_known_info = self._well_known_endpoint_info()
         pkce = PKCE()
 
         consent_id = self._account_info_consent().consentId
+        authorize_url = self._authorize_url(well_known_info.authorization_endpoint, consent_id, pkce.code_challenge, state)
 
-        authorize_url = self._authorize_url(well_known_info.authorization_endpoint, consent_id, pkce.code_challenge)
+        self.stateMap[state] = StateMapValues(authorize_url,consent_id,pkce.code_verifier)
+        print(self.stateMap)
+        return authorize_url
+
+    def token_retrieval(self,code:str, state:str='cliEmpty')-> AccessCredentials:
+        print(self.stateMap)
+        try:
+            stateValues = self.stateMap[state]
+        except KeyError:
+            raise OAuthFlowError()
+
+        consent_id = stateValues.consent_id
+        code_verifier = stateValues.code_verifier
+
+        token_endpoint = self._well_known_endpoint_info().token_endpoint
+        tokenModel = self._token_from_code(token_endpoint, code, code_verifier)
+        print("Consent ID: " + consent_id)
+        print("Access Token: " + tokenModel.access_token)
+        accessCredentials = AccessCredentials(consent_id, tokenModel.access_token)
+        return accessCredentials
+
+    # whole login flow to get valid token
+    def cli_login_credentials(self) -> AccessCredentials:
+        authorize_url = self.get_login_url()
         print('Open in browser: ' + authorize_url)
-
-        # print('Enter url you got redirected to:')
-        # returned_url = input()
-        # print(returned_url)
-
-        #TODO now here socket server
-        #TODO gets url parameter either error code and raises error or &code= and gets tokens from token endpoint with this
-        # self.cont = False
-        # while not self.cont:
-        #     pass
-        # print('Opened')
 
         # TODO cli only method here parallel version
         print('Input code received:')
         code = input()
-        #TODO work here
-        tokenModel = self._token_from_code(well_known_info.token_endpoint, code, pkce.code_verifier)
-        print("Consent ID: " + consent_id)
-        print("Access Token: " + tokenModel.access_token)
-
-        accessCredentials = AccessCredentials(consent_id, tokenModel.access_token)
-        return accessCredentials
+        return self.token_retrieval(code)
 
 
     # @app.route('/')

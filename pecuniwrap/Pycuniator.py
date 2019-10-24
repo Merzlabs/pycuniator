@@ -14,11 +14,19 @@ class Pycuniator():
         self._requests = Requests(cert_path,private_key_path)
         self._oauth = OAuth(self._config, self._requests)
 
-        self._credentials:AccessCredentials = self._login()
-        self._ais = AccountInformationService(self._config, self._requests, self._credentials)
+    def cli_login(self) -> AccessCredentials:
+        credentials: AccessCredentials = self._oauth.cli_login_credentials()
+        self._credentials: AccessCredentials = credentials
+        self._ais: AccountInformationService = AccountInformationService(self._config, self._requests, self._credentials)
+        return credentials
 
-    def _login(self):
-        return self._oauth.login()
+    def get_authorize_url(self, state) -> str:
+        return self._oauth.get_login_url(state)
 
+    def get_token(self,code:str, state:str) -> AccessCredentials:
+        credentials: AccessCredentials = self._oauth.token_retrieval(code, state)
+        self._ais: AccountInformationService = AccountInformationService(self._config, self._requests, credentials)
+        return credentials
+        
     def get_Balance(self) -> Accounts:
         return self._ais.getAccountsWithBalance()

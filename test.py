@@ -5,7 +5,7 @@ from pecuniwrap.Pycuniator import Pycuniator
 
 secrets_folder = 'secrets'
 secrets_base_path= os.path.abspath(os.path.dirname(__file__)) + '/' + secrets_folder + '/'
-load_dotenv(secrets_folder + '/sandbox.env')
+load_dotenv(secrets_base_path + '/sandbox.env')
 
 
 PT_HOST = os.getenv('PT_HOST')
