@@ -18,7 +18,7 @@ class AccountInformationService:
             "Authorization": self._accessCredentials.access_token, 
         }
         parameters = {
-            "withBalance": True
+            "withBalance": "true"
         }
         url = self._config.full_url + 'accounts'
 
