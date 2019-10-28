@@ -2,7 +2,6 @@ from pecuniwrap.exceptions.InvalidResponseError import InvalidResponseError
 
 class Accounts:
     def __init__(self, inDict: dict):
-        print(inDict)
         #TODO error handling and raising if something does not exist
         try:
             self.accounts = []
@@ -15,6 +14,8 @@ class Accounts:
         if (self.accounts is None):
             #TODO inputs
             raise InvalidResponseError(None, inDict, e)  
+    def reprJSON(self):
+        return dict(accounts=self.accounts) 
 
 class Account:
     def __init__(self, inDict: dict):
@@ -24,7 +25,6 @@ class Account:
             self.iban = inDict["iban"]            
             self.currency = inDict["currency"]            
             self.product = inDict["product"]
-            self.iban = inDict["iban"]   
 
             self.balances = []
             for balance in inDict["balances"]:
@@ -48,6 +48,8 @@ class Account:
                 or self.product is None or self.balances is None or self.iban is None):
             #TODO inputs
             raise InvalidResponseError(None, inDict, e)
+    def reprJSON(self):
+        return dict(resourceId=self.resourceId, iban=self.iban,currency=self.currency,product=self.product, balances=self.balances) 
 
 class Balance:
     def __init__(self, inDict: dict):
@@ -63,6 +65,8 @@ class Balance:
         if (self.balanceType is None or self.balanceAmount is None or self.referenceDate is None):
             #TODO inputs
             raise InvalidResponseError(None, inDict, e) 
+    def reprJSON(self):
+        return dict(balanceType=self.balanceType, balanceAmount=self.balanceAmount, referenceDate=self.referenceDate) 
 
 class BalanceAmount:
     def __init__(self, inDict: dict):
@@ -76,4 +80,6 @@ class BalanceAmount:
 
         if (self.currency is None) or self.amount is None:
             #TODO inputs
-            raise InvalidResponseError(None, inDict, e)    
+            raise InvalidResponseError(None, inDict, e)
+    def reprJSON(self):
+        return dict(currency=self.currency, amount=self.amount) 
