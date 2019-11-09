@@ -17,6 +17,7 @@ class Pycuniator:
     def cli_login(self) -> AccessCredentials:
         credentials: AccessCredentials = self._oauth.cli_login_credentials()
         self._credentials: AccessCredentials = credentials
+        print(self._credentials)
         self.ais: AccountInformationService = AccountInformationService(self._config, self._requests, self._credentials)
         return credentials
 

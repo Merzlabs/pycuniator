@@ -25,5 +25,8 @@ TPP_CLIENT_ID = os.getenv('TPP_CLIENT_ID')
 
 cuniator = Pycuniator(PT_HOST,PT_PORT, PT_PATH,PT_VERS,PT_TPPREDIRECTURI,PT_IBAN,PT_WELLKNOWN, CERT_PATH, PRIV_KEY_PATH, TPP_CLIENT_ID)
 
+tokens = cuniator.cli_login()
+cuniator.setAis(tokens.consent_id,tokens.access_token)
+
 # cuniator.test()
-print(cuniator.get_Balance().accounts[0].iban)
+print(cuniator.ais.get_Balance().accounts[0].iban)

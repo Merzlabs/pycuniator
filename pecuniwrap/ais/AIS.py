@@ -27,3 +27,5 @@ class AccountInformationService:
         print(r.json())
         accountInfo = Accounts(r.json())
         return accountInfo
+
+# TODO get transactions method and route in web
