@@ -1,85 +1,34 @@
-from pecuniwrap.exceptions.InvalidResponseError import InvalidResponseError
+from marshmallow import Schema,fields
 
-class Accounts:
-    def __init__(self, inDict: dict):
-        #TODO error handling and raising if something does not exist
-        try:
-            self.accounts = []
-            for account in inDict["accounts"]:
-                self.accounts.append(Account(account))
-        except KeyError as e:
-            #TODO inputs
-            raise InvalidResponseError(None, inDict, e)
+# from pecuniwrap.exceptions.InvalidResponseError import InvalidResponseError
 
-        if (self.accounts is None):
-            #TODO inputs
-            raise InvalidResponseError(None, inDict, e)  
-    def reprJSON(self):
-        return dict(accounts=self.accounts) 
+class BalanceAmount(Schema):
+    currency = fields.Str()
+    amount = fields.Float()
 
-class Account:
-    def __init__(self, inDict: dict):
-        #TODO error handling and raising if something does not exist
-        try:
-            self.resourceId = inDict["resourceId"]            
-            self.iban = inDict["iban"]            
-            self.currency = inDict["currency"]            
-            self.product = inDict["product"]
+class Balance(Schema):
+    balanceType = fields.Str()    
+    balanceAmount = fields.Nested(BalanceAmount)
+    referenceDate = fields.DateTime(format="%Y-%m-%d") 
 
-            self.balances = []
-            for balance in inDict["balances"]:
-                self.balances.append(Balance(balance))
+class HrefLinks(Schema):
+    href = fields.Url()
 
-            #TODO _links attribute e.g.
-            # "_links": {
-            #     "balances": {
-            #         "href": "https://xs2a-sandbox.f-i-apim.de:8444/fixs2a-env/xs2a-api/12345678/v1/accounts/3217d050-f5b5-4318-a799-413bce784ef6/balances"
-            #     },
-            #     "transactions": {
-            #         "href": "https://xs2a-sandbox.f-i-apim.de:8444/fixs2a-env/xs2a-api/12345678/v1/accounts/3217d050-f5b5-4318-a799-413bce784ef6/transactions"
-            #     }
-            # }
+class Links(Schema):
+    balances = fields.Nested(HrefLinks)
+    transactions = fields.Nested(HrefLinks)
 
-        except KeyError as e:
-            #TODO inputs
-            raise InvalidResponseError(None, inDict, e)
+class Account(Schema):
+    ownerName = fields.Str()
+    resourceId = fields.UUID() #TODO is uuid4
+    iban = fields.Str()  #TODO custom iban validator for marshmallow
+    currency = fields.Str()
+    product = fields.Str()
+    balances = fields.Nested(Balance(many=True))
+    _links = fields.Nested(Links)
 
-        if (self.resourceId is None or self.iban is None or self.currency is None
-                or self.product is None or self.balances is None or self.iban is None):
-            #TODO inputs
-            raise InvalidResponseError(None, inDict, e)
-    def reprJSON(self):
-        return dict(resourceId=self.resourceId, iban=self.iban,currency=self.currency,product=self.product, balances=self.balances) 
+class Accounts(Schema):
+    accounts = fields.Nested(Account(many=True))
 
-class Balance:
-    def __init__(self, inDict: dict):
-        #TODO error handling and raising if something does not exist
-        try:
-            self.balanceType = inDict["balanceType"]            
-            self.balanceAmount = BalanceAmount(inDict["balanceAmount"])           
-            self.referenceDate = inDict["referenceDate"]            
-        except KeyError as e:
-            #TODO inputs
-            raise InvalidResponseError(None, inDict, e)
-
-        if (self.balanceType is None or self.balanceAmount is None or self.referenceDate is None):
-            #TODO inputs
-            raise InvalidResponseError(None, inDict, e) 
-    def reprJSON(self):
-        return dict(balanceType=self.balanceType, balanceAmount=self.balanceAmount, referenceDate=self.referenceDate) 
-
-class BalanceAmount:
-    def __init__(self, inDict: dict):
-        #TODO error handling and raising if something does not exist
-        try:
-            self.currency = inDict["currency"]            
-            self.amount = inDict["amount"]            
-        except KeyError as e:
-            #TODO inputs
-            raise InvalidResponseError(None, inDict, e)
-
-        if (self.currency is None) or self.amount is None:
-            #TODO inputs
-            raise InvalidResponseError(None, inDict, e)
-    def reprJSON(self):
-        return dict(currency=self.currency, amount=self.amount) 
+    #TODO useful error if {'tppMessages': [{'category': 'ERROR', 'code': 'CONSENT_UNKNOWN'}]} basically if tppMessage is there
+    # tppMessages = fields.Str()

@@ -5,15 +5,13 @@ from pecuniwrap.ais.AIS import AccountInformationService
 from pecuniwrap.Pycuniator import Pycuniator
 
 from pecuniapp.Config import PecuniAppConfig
-from pecuniapp.ResponseJsonEncoder import return_json
 c = PecuniAppConfig()
 
 ais_bp = Blueprint('ais_bp', __name__)
 
 
-
+#TODO flask_smorest and return of accountsSchema openapi and so on
 @ais_bp.route('/balance')
-@return_json
 def aisTest():
     consent_id = request.headers.get('consent_id')
     token = request.headers.get('authorization')

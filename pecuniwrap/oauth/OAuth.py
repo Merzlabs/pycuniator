@@ -30,7 +30,7 @@ class OAuth:
         r = self._requests.get(self._config.wellknown)
         schema = WellKnownEndpointResponse()
         info = schema.load(r.json())
-        return info
+        return schema.dump(info)
 
     # TODO method to give auth routes the iban requested for right consenst
     # 2. requests consent to input into authorize redirect url which prompt user
@@ -65,7 +65,7 @@ class OAuth:
         schema = AccountInfoConsent()
         consent = schema.load(r.json())
         # consent = AccountInfoConsent(r.json())
-        return consent
+        return schema.dump(consent)
 
     # 3. Construct authorize url which user should open to enter credentials
     def _authorize_url(self, authorization_endpoint: str, consentId: str, code_challenge:str, state:str):
@@ -96,7 +96,7 @@ class OAuth:
         r = self._requests.post(token_endpoint, headers, body)
         print(r.text)
         schema = TokenEnpointResponse()
-        return schema.load(r.json())
+        return schema.dump(schema.load(r.json()))
 
     #TODO method with SOCKET waiting for reponse redirect rule call
 

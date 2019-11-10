@@ -25,7 +25,8 @@ class AccountInformationService:
         r = self._requests.get(url,headers,parameters)
         print(r.url)
         print(r.json())
-        accountInfo = Accounts(r.json())
-        return accountInfo
+        schema = Accounts()
+        accountInfo = schema.load(r.json())
+        return schema.dump(accountInfo)
 
 # TODO get transactions method and route in web

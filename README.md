@@ -5,3 +5,6 @@
     * Optional make virtualenv with `virtualenv -p python3 venv`
 2. Install requirements with `pip install -r ./requirements.txt`
 3. Run test with `python3 run test.py`
+
+## TODO 
+pipe tppMessages errors by sparkassen api better to frontends
